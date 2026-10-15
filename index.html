@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+<title>SC03 Studio</title>
+<style>
+  /* Never painted in the normal case: the redirect below runs before first
+     paint. This styling exists only for the no-JS / fallback reader. */
+  html { background: #f2f2f7; }
+  @media (prefers-color-scheme: dark) { html { background: #000; } }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    display: grid; place-items: center; padding: 32px;
+    font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    color: #1d1d1f;
+  }
+  @media (prefers-color-scheme: dark) { body { color: #f2f2f7; } }
+  .card { max-width: 420px; text-align: center; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p { font-size: 14px; line-height: 21px; color: #6e6e73; margin: 0 0 22px; }
+  @media (prefers-color-scheme: dark) { p { color: #98989f; } }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { margin: 8px 0; }
+  a {
+    display: inline-block; min-width: 230px; padding: 12px 20px;
+    border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 600;
+    background: #007aff; color: #fff;
+  }
+  a.ios { background: #0071e3; }
+  a.material { background: #6750a4; }
+  a:hover { filter: brightness(1.08); }
+</style>
+<script>
+/* SC03 Studio — platform gateway.
+   One repository, two editions: the Apple edition (HIG / Liquid Glass) at
+   ./ios/ and the Material edition at ./material/. This page sends each
+   visitor to the edition that matches their platform, instantly and without
+   adding a history entry.
+
+   Rules, in order:
+     1. ?ui=ios or ?ui=material  — manual choice, remembered in localStorage
+     2. saved preference          — a previous manual choice
+     3. platform sniffing         — Apple platforms -> ios, others -> material
+     4. default                   — material
+
+   ?ui=auto clears a saved preference. Direct links to <site>/ios/ or
+   <site>/material/ bypass this page entirely — share those when you want to
+   pin an edition. */
+(function () {
+  'use strict';
+
+  var KEY = 'sc03-studio:ui';
+  var pref = null;
+  try { pref = localStorage.getItem(KEY); } catch (e) { /* private mode etc. */ }
+
+  var forced = null;
+  try { forced = new URLSearchParams(location.search).get('ui'); } catch (e) { /* ancient UA */ }
+  if (forced === 'ios' || forced === 'material') {
+    pref = forced;
+    try { localStorage.setItem(KEY, forced); } catch (e) {}
+  } else if (forced === 'auto') {
+    pref = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+  }
+
+  var ua = navigator.userAgent || '';
+  var uadPlatform = '';
+  try {
+    uadPlatform = (navigator.userAgentData && navigator.userAgentData.platform) || '';
+  } catch (e) {}
+  /* iPhone / iPod touch spell it out; iPadOS 13+ masquerades as desktop Mac;
+     desktop Macs carry "Macintosh". All are Apple platforms. */
+  var isApple = /iPad|iPhone|iPod/.test(ua)
+    || /Macintosh/.test(ua)
+    || uadPlatform === 'iOS'
+    || uadPlatform === 'macOS';
+
+  var dest = (pref === 'ios' || pref === 'material')
+    ? pref
+    : (isApple ? 'ios' : 'material');
+
+  /* Retire a service worker left behind by an earlier single-edition deploy
+     at this directory's scope (the /sw.js beside this file handles the
+     already-controlling case). Scopes of ./ios/ and ./material/ never match,
+     so the live workers are untouched. */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      var here = new URL('./', location.href).pathname;
+      regs.forEach(function (r) {
+        if (new URL(r.scope).pathname === here) {
+          r.unregister().catch(function () {});
+        }
+      });
+    }).catch(function () {});
+  }
+
+  location.replace(dest + '/');
+})();
+</script>
+</head>
+<body>
+  <main class="card">
+    <h1>SC03 Studio</h1>
+    <p>Two editions ship from this address. JavaScript decides which one fits
+       your device — or pick for yourself:</p>
+    <ul>
+      <li><a class="ios" href="ios/">Apple edition<span style="display:block;font-size:12px;font-weight:400;opacity:.85">iOS · iPadOS · macOS</span></a></li>
+      <li><a class="material" href="material/">Material edition<span style="display:block;font-size:12px;font-weight:400;opacity:.85">Android · Windows · Linux</span></a></li>
+    </ul>
+  </main>
+</body>
+</html>

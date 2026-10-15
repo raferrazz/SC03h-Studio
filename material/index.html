@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- v1.3.4: maximum-scale/user-scalable — the owner's explicit call: on a
+         phone, accidental pinch-zooms and double-tap zooms broke the app feel
+         several times a session. An installed-like tool locks its scale.
+         (iOS Safari still allows pinch in the BROWSER despite the meta; the
+         app.css touch-action lock below is the belt to this suspenders.) -->
+    <!-- v1.3.2: scheme-split theme-color for the FIRST paint of the browser
+         chrome (address bar, Android nav bar in tabs); the theme engine
+         collapses these into one authoritative meta the moment it boots. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fffbfe" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141218" />
+    <meta
+      name="description"
+      content="Crie e imprima texto, imagens, QR codes e tabelas na mini impressora térmica SC03h via Web Bluetooth — direto do navegador."
+    />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="preload" as="font" type="font/woff2" href="./fonts/RobotoFlex-latin-var.woff2" crossorigin fetchpriority="high" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="SC03 Studio" />
+    <title>SC03 Studio — Estúdio de impressão térmica</title>
+    <script>
+      /* v1.3.2 — appearance-aware manifest, before anything can fetch it.
+         Chromium tints the INSTALLED window's system navigation bar from the
+         manifest background_color (a single static value per install). A dark
+         session installed against the light #fffbfe background drew a jarring
+         white strip under the dark app (Android field report). Resolve the
+         appearance NOW — the in-app mirror written by the theme engine, else
+         the system scheme — and swap in the dark manifest variant so the
+         install (and its splash) launch dark. The id stays './' in both
+         variants, so this never forks the install identity. */
+      (function () {
+        try {
+          var dark = false;
+          try {
+            dark = localStorage.getItem('sc03-studio:appearance') === 'dark';
+          } catch (e) { /* private mode */ }
+          if (!dark && window.matchMedia) dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (!dark) return;
+          var swap = function () {
+            var links = document.querySelectorAll('link[rel="manifest"]');
+            for (var i = 0; i < links.length; i++) {
+              var href = links[i].getAttribute('href');
+              if (href && /(^|\/)manifest\.webmanifest$/.test(href.replace(/^\./, ''))) {
+                links[i].setAttribute('href', href.replace(/manifest\.webmanifest$/, 'manifest-dark.webmanifest'));
+              }
+            }
+          };
+          swap();
+          if (document.addEventListener) {
+            new MutationObserver(function () { swap(); }).observe(document.documentElement, { childList: true, subtree: true });
+            document.addEventListener('DOMContentLoaded', function () { swap(); });
+          }
+        } catch (e) { /* never break the page over chrome tinting */ }
+      })();
+    </script>
+    <style>
+      /* First-paint shell: dark, neutral, no flash before tokens hydrate. */
+      html { background: #141218; color-scheme: dark light; }
+      html, body { margin: 0; min-height: 100%; }
+      #root { min-height: 100dvh; }
+      .boot {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        font: 500 14px/20px system-ui, sans-serif; letter-spacing: 0.1px;
+        color: #e6e0e9; background: #141218;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-DqJvsBSe.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/react-D7ykMl79.js">
+    <link rel="modulepreload" crossorigin href="./assets/icons-CZ7c8tUV.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-prTuvczS.css">
+  <link rel="manifest" href="./manifest.webmanifest"></head>
+  <body>
+    <div id="root"><div class="boot">SC03 Studio…</div></div>
+  </body>
+</html>
